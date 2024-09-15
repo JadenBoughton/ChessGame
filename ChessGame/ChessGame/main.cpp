@@ -7,6 +7,7 @@
 #include "QueenLogic.h"
 #include "KingLogic.h"
 #include <stack>
+#include <sstream>
 
 using namespace std;
 
@@ -93,7 +94,7 @@ int main() {
         cout << "Welcome to Chess! \n";
         cout << "What would you like to do? \n";
         cout << "\t p: play PvP game without logging in\n";
-        cout << "\t e: exit program";
+        cout << "\t e: exit program\n";
         //cout << "\t l: login"; TODO: implement login w/ mySQL
 
         cin >> response;
@@ -125,7 +126,62 @@ void gameLoop(){
 }
 
 void startGamePvPBlack() {
+    bool correctMove = false;
+    int *numArray;
+    while (!correctMove) {
+        printBoard();
+        string move;
 
+        cout << "Enter your move:\n For example c2-c4" << endl;
+        cin >> move;
+
+        char across = move.at(0);
+        char down = move.at(1);
+
+        int across1 = characterConversion(across) - 1;
+        stringstream convert;
+        convert<<down;
+        int down1 = stoi(convert.str()) - 1;
+
+        if (across1 < 7 && across1 > 0 && down1 < 7 && down1 > 0 && LogicArray[across1][down1]->getSymbol() != '_') {
+            if(LogicArray[across1][down1]->getDirection() == '-') {
+                numArray = LogicArray[across1][down1]->moveLogic(move, blackAndWhite, 8);
+
+                if(numArray != nullptr && LogicArray[across1][down1]->getSymbol() == 'k'){
+                    numArray--;
+                    numArray--;
+                    numArray--;
+                    numArray = LogicArray[across1][down1]->testIfInCheck(LogicArray, blackAndWhite, numArray);
+
+                    if(LogicArray[across1][down1]->Castling){
+                        bool ifPossible = additionalKingLogicBackward(numArray);
+                        LogicArray[across1][down1]->Castling = false;
+
+                        if(!ifPossible){
+                            numArray = nullptr;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(numArray != nullptr) {
+            numArray--;
+            numArray--;
+            numArray--;
+
+            /*if(LogicArray[across1][down1]->getSymbol() == 'K') {
+                if(additionalKingLogic(numArray)){correctMove = true;}
+            }else {
+                correctMove = true;
+                executeMove(numArray);
+            }*/
+
+            correctMove = true;
+            executeMove(numArray);
+
+        }else{cout<<"Your input does not fit the parameters of the game."<<endl;}
+    }
 }
 
 void startGamePvPWhite() {
@@ -142,9 +198,11 @@ void startGamePvPWhite() {
         char down = move.at(1);
 
         int across1 = characterConversion(across) - 1;
-        int down1 = stoi(down + "") - 1;
+        stringstream convert;
+        convert<<down;
+        int down1 = stoi(convert.str()) - 1;
 
-        if (across1 < 7 && across1 > 0 && down1 < 7 && down1 > 0 && LogicArray[across1][down1]->getSymbol() != '_') {
+        if (across1 < 8 && across1 > -1 && down1 < 8 && down1 > -1 && LogicArray[across1][down1]->getSymbol() != '_') {
             if(LogicArray[across1][down1]->getDirection() == '+') {
                 numArray = LogicArray[across1][down1]->moveLogic(move, blackAndWhite, 8);
 
@@ -245,14 +303,69 @@ bool additionalKingLogicForward(int *numArray){
 }
 
 bool additionalKingLogicBackward(int *numArray){
+    int across_from = *numArray;
+    numArray++;
+    int down_from = *numArray;
+    numArray++;
+    int across_to = *numArray;
+    numArray++;
+    int down_to = *numArray;
 
+    numArray--;
+    numArray--;
+    numArray--;
+
+    int difference = across_from - across_to;
+
+    numArray = LogicArray[7][4]->testIfInCheck(LogicArray, blackAndWhite, numArray);
+
+    if(numArray != nullptr) {
+        if (difference == -2 && blackAndWhite[7][5] == '_' && blackAndWhite[7][6] == '_'
+            && LogicArray[7][7]->getSymbol() == 'r' && LogicArray[7][7]->Castling) {
+
+            GamePiecesLogic *temp = LogicArray[7][4];
+            LogicArray[7][4] = LogicArray[7][6];
+            LogicArray[7][6] = temp;
+
+            blackAndWhite[7][4] = '_';
+            blackAndWhite[7][6] = 'B';
+
+            GamePiecesLogic *temp2 = LogicArray[7][7];
+            LogicArray[7][7] = LogicArray[7][5];
+            LogicArray[7][5] = temp2;
+
+            blackAndWhite[7][7] = '_';
+            blackAndWhite[7][5] = 'b';
+            return true;
+        }else if (difference == 2 && blackAndWhite[7][2] == '_' && blackAndWhite[7][3] == '_'
+                  && LogicArray[0][7]->getSymbol() == 'r' && LogicArray[0][0]->Castling){
+
+            GamePiecesLogic *temp = LogicArray[7][4];
+            LogicArray[7][4] = LogicArray[7][2];
+            LogicArray[7][2] = temp;
+
+            blackAndWhite[7][4] = '_';
+            blackAndWhite[7][2] = 'W';
+
+            GamePiecesLogic *temp2 = LogicArray[7][0];
+            LogicArray[7][0] = LogicArray[7][3];
+            LogicArray[7][3] = temp2;
+
+            blackAndWhite[7][0] = '_';
+            blackAndWhite[7][3] = 'w';
+            return true;
+        }
+    }
     return false;
 }
 
 void executeMove(int *numArray){
-    int across_from = *numArray++;
-    int down_from = *numArray++;
-    int across_to = *numArray++;
+    int across_from = *numArray;
+    numArray++;
+    int down_from = *numArray;
+    numArray++;
+    int across_to = *numArray;
+    numArray++;
     int down_to = *numArray;
 
     GamePiecesLogic* temp = LogicArray[across_to][down_to];
@@ -294,14 +407,14 @@ void executeMove(int *numArray){
 int characterConversion(char letter)
 {
     switch (letter) {
-        case 'a': return 1;
-        case 'b': return 2;
-        case 'c': return 3;
-        case 'd': return 4;
-        case 'e': return 5;
-        case 'f': return 6;
-        case 'g': return 7;
-        case 'h': return 8;
+        case 'a': return 0;
+        case 'b': return 1;
+        case 'c': return 2;
+        case 'd': return 3;
+        case 'e': return 4;
+        case 'f': return 5;
+        case 'g': return 6;
+        case 'h': return 7;
         default: return 9;
     }
 
@@ -311,12 +424,15 @@ int characterConversion(char letter)
 
 
 void printBoard(){
-    string board = "";
+    string board;
     int num = 8;
     for(int i = 7; i >= 0; i--){
-        board += &"" [ num--];
+        stringstream convert;
+        convert<<num--;
+        board += convert.str();
         for(int j = 0; j < 8; j++){
-            board += &"|" [ LogicArray[i][j]->getSymbol()];
+            board += "|";
+            board.push_back(LogicArray[i][j]->getSymbol());
         }
         board += "|\n";
     }

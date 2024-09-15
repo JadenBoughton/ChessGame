@@ -20,8 +20,8 @@ public:
     virtual int* testIfInCheck(GamePiecesLogic *GameBoardArray[][8], char gameBoardArray[][8], int locationList[4]);
     static int* moveConverter(string move);
     static int characterConversion(char letter);
-    char getSymbol();
-    char getDirection();
+    char getSymbol() const;
+    char getDirection() const;
     bool Castling;
 };
 
