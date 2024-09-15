@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "GamePiecesLogic.h"
+#include <sstream>
 using namespace std;
 
 
@@ -37,9 +38,13 @@ int* GamePiecesLogic::moveConverter(string move) {
     char down_to = move.at(4);
 
     int across_from1 = GamePiecesLogic::characterConversion(across_from)-1;
-    int down_from1 = stoi(down_from+"")-1;
+    stringstream convert;
+    convert << down_from;
+    int down_from1 = stoi(convert.str())-1;
+    convert.clear();
     int across_to1 = GamePiecesLogic::characterConversion(across_to)-1;
-    int down_to1 = stoi(down_to+"")-1;
+    convert << down_to;
+    int down_to1 = stoi(convert.str())-1;
 
     int moveArray[] = {across_from1, down_from1, across_to1, down_to1};
     return &moveArray[0];
@@ -63,5 +68,5 @@ int GamePiecesLogic::characterConversion(char letter)
 
 }
 
-char GamePiecesLogic::getSymbol() {return symbol;}
-char GamePiecesLogic::getDirection() {return direction;}
+char GamePiecesLogic::getSymbol() const {return symbol;}
+char GamePiecesLogic::getDirection() const {return direction;}
